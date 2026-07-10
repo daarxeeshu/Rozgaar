@@ -6,58 +6,54 @@ const schema = z.object({
   phone: z.string().regex(/^\+91[6-9]\d{9}$/, 'Valid Indian mobile number required'),
 })
 
-function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString()
-}
+// Mock OTP for development
+const DEV_OTP = '123456'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { phone } = schema.parse(body)
 
-    const otp = generateOtp()
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
 
-    // Invalidate old OTPs
+    // Invalidate previous OTPs
     await prisma.otpLog.updateMany({
-      where: { phone, used: false },
-      data: { used: true },
+      where: {
+        phone,
+        used: false,
+      },
+      data: {
+        used: true,
+      },
     })
 
-    // Save new OTP
+    // Store mock OTP
     await prisma.otpLog.create({
-      data: { phone, otp, expiresAt },
+      data: {
+        phone,
+        otp: DEV_OTP,
+        expiresAt,
+      },
     })
 
-    // 🔥 ALWAYS SHOW OTP IN TERMINAL
-    console.log(`\n=============================`)
-    console.log(`📲 OTP for ${phone}: ${otp}`)
-    console.log(`=============================\n`)
+    console.log('==============================')
+    console.log(`📲 MOCK OTP for ${phone}: ${DEV_OTP}`)
+    console.log('==============================')
 
-    // Try SMS (but NEVER fail if it breaks)
-    try {
-      const twilio = require('twilio')
-      const client = twilio(
-        process.env.TWILIO_ACCOUNT_SID,
-        process.env.TWILIO_AUTH_TOKEN
-      )
-
-      await client.messages.create({
-        to: phone,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        body: `Rozgaar OTP: ${otp}`,
-      })
-    } catch (err) {
-      console.log('⚠️ SMS failed — using terminal OTP instead')
-    }
-
-    // ✅ ALWAYS SUCCESS RESPONSE
     return NextResponse.json({
       success: true,
-      message: 'OTP generated',
+      message: 'Development OTP generated',
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error(error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+
+    return NextResponse.json(
+      {
+        error: 'Server error',
+      },
+      {
+        status: 500,
+      }
+    )
   }
 }
