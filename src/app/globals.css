@@ -1,0 +1,149 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --chinar: #C0392B;
+  --chinar-deep: #8B1A11;
+  --chinar-light: #FADBD8;
+  --saffron: #E67E22;
+  --saffron-light: #FDEBD0;
+  --dal: #1A6B4A;
+  --dal-light: #D5F0E6;
+  --snow: #FAFAF8;
+  --stone: #4A4744;
+  --mist: #8C8884;
+  --cloud: #F0EDE8;
+  --border: #E0DAD4;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-nunito), 'Nunito', sans-serif;
+  background-color: var(--snow);
+  color: var(--stone);
+  overscroll-behavior: none;
+}
+
+/* Kashmiri border stripe — top and bottom decoration */
+.kashmiri-stripe {
+  height: 5px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--chinar)   0px,  var(--chinar)   14px,
+    var(--saffron)  14px, var(--saffron)  28px,
+    var(--dal)      28px, var(--dal)      42px
+  );
+}
+
+/* Scrollable rows — hide scrollbar but keep scroll */
+.scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.scroll-x::-webkit-scrollbar { display: none; }
+
+/* Page slide animation */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.page-enter {
+  animation: slideInRight 0.25s ease;
+}
+
+/* Bottom sheet slide up */
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.sheet-enter {
+  animation: sheetUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Skeleton loader */
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #ede8e2 25%, #f5f2ee 50%, #ede8e2 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 8px;
+}
+
+/* OTP input */
+.otp-input {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 800;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: white;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: var(--font-nunito), monospace;
+  caret-color: var(--chinar);
+}
+.otp-input:focus {
+  border-color: var(--chinar);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+}
+.otp-input.filled {
+  border-color: var(--chinar);
+  background: var(--chinar-light);
+}
+
+/* Smooth bottom nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  background: white;
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+/* Chat bubble */
+.bubble-out {
+  background: var(--chinar);
+  color: white;
+  border-radius: 18px 18px 4px 18px;
+  max-width: 75%;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-left: auto;
+}
+.bubble-in {
+  background: var(--cloud);
+  color: var(--stone);
+  border-radius: 18px 18px 18px 4px;
+  max-width: 75%;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Urdu font */
+.font-urdu {
+  font-family: 'Noto Nastaliq Urdu', serif;
+  direction: rtl;
+}
+
+/* Button press effect */
+.btn-press:active {
+  transform: scale(0.96);
+}

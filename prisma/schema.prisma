@@ -1,0 +1,185 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  phone         String    @unique
+  name          String?
+  aadhaarLast4  String?
+  aadhaarVerified Boolean @default(false)
+  profilePhoto  String?
+  role          Role      @default(CUSTOMER)
+  district      String?
+  area          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  workerProfile WorkerProfile?
+  bookingsAsCustomer Booking[] @relation("CustomerBookings")
+  sentMessages  Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  chatRoomsAsUser1 ChatRoom[] @relation("ChatUser1")
+  chatRoomsAsUser2 ChatRoom[] @relation("ChatUser2")
+  reviewsGiven  Review[]  @relation("ReviewGiven")
+  reviewsReceived Review[] @relation("ReviewReceived")
+
+  @@map("users")
+}
+
+model WorkerProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trade       String
+  tradeEmoji  String
+  bio         String?
+  yearsExp    Int?
+  isAvailable Boolean  @default(true)
+  avgRating   Float    @default(0)
+  totalReviews Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  services    Service[]
+  bookings    Booking[] @relation("WorkerBookings")
+
+  @@map("worker_profiles")
+}
+
+model Service {
+  id            String        @id @default(cuid())
+  workerProfileId String
+  workerProfile WorkerProfile @relation(fields: [workerProfileId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  price         Int           // in rupees
+  priceUnit     PriceUnit     @default(PER_VISIT)
+  durationMins  Int?
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+
+  bookings      Booking[]
+
+  @@map("services")
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  customerId      String
+  customer        User          @relation("CustomerBookings", fields: [customerId], references: [id])
+  workerProfileId String
+  workerProfile   WorkerProfile @relation("WorkerBookings", fields: [workerProfileId], references: [id])
+  serviceId       String
+  service         Service       @relation(fields: [serviceId], references: [id])
+  scheduledAt     DateTime
+  status          BookingStatus @default(PENDING)
+  paymentMethod   PaymentMethod @default(CASH)
+  paymentStatus   PaymentStatus @default(PENDING)
+  upiTxnId        String?
+  amount          Int           // in rupees
+  notes           String?
+  chatRoomId      String?
+  chatRoom        ChatRoom?     @relation(fields: [chatRoomId], references: [id])
+  review          Review?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("bookings")
+}
+
+model ChatRoom {
+  id        String    @id @default(cuid())
+  user1Id   String
+  user1     User      @relation("ChatUser1", fields: [user1Id], references: [id])
+  user2Id   String
+  user2     User      @relation("ChatUser2", fields: [user2Id], references: [id])
+  bookings  Booking[]
+  messages  Message[]
+  createdAt DateTime  @default(now())
+
+  @@unique([user1Id, user2Id])
+  @@map("chat_rooms")
+}
+
+model Message {
+  id         String    @id @default(cuid())
+  chatRoomId String
+  chatRoom   ChatRoom  @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  senderId   String
+  sender     User      @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User      @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content    String
+  isRead     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  @@map("messages")
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  bookingId   String   @unique
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+  reviewerId  String
+  reviewer    User     @relation("ReviewGiven", fields: [reviewerId], references: [id])
+  revieweeId  String
+  reviewee    User     @relation("ReviewReceived", fields: [revieweeId], references: [id])
+  rating      Int      // 1-5
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  @@map("reviews")
+}
+
+model OtpLog {
+  id        String   @id @default(cuid())
+  phone     String
+  otp       String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("otp_logs")
+}
+
+enum Role {
+  CUSTOMER
+  WORKER
+  BOTH
+}
+
+enum PriceUnit {
+  PER_VISIT
+  PER_HOUR
+  PER_DAY
+  PER_ITEM
+  PER_KM
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
